@@ -1,0 +1,351 @@
+#include <windows.h>
+#include <iostream>
+#include <stdio.h>
+#include <tchar.h>
+#include <strsafe.h>
+
+
+
+void walk();
+void fishing();
+void pixelCheck();
+void catchPokemon();
+bool encounterCheck();
+int pokemonCheck();
+
+INPUT ip;
+bool cont = FALSE;
+bool fish = FALSE;
+bool pixTest = FALSE;
+bool quitSet = FALSE;
+bool quitSet2 = FALSE;
+bool quitSet3 = FALSE;
+
+int encounter = 0;
+
+
+DWORD WINAPI myThread(LPVOID lpParam)
+{
+	while (1)
+	{
+		//printf("%d\n", GetKeyState('Z'));
+		if (GetKeyState('Z') < 0 && quitSet == FALSE)
+		{
+			quitSet = TRUE;
+			fish = FALSE;
+			if (cont == TRUE)
+			{
+		
+				cont = FALSE;
+				printf("Standing...\n");
+			}
+			else
+			{
+				cont = TRUE;
+				printf("Walking...\n");
+			}
+		}
+		if(GetKeyState('X') < 0 && quitSet2 == FALSE)
+		{
+			quitSet2 = TRUE;
+			cont = FALSE;
+			if (fish == TRUE)
+			{
+				fish = FALSE;
+				printf("Idle...\n");
+			}
+			else
+			{
+				fish = TRUE;
+				printf("Fishing...\n");
+			}
+		}
+		if (GetKeyState('C') < 0 && quitSet3 == FALSE)
+		{
+			quitSet3 = TRUE;
+			cont = FALSE;
+			fish = FALSE;
+			if (pixTest == TRUE)
+			{
+				pixTest = FALSE;
+			}
+			else
+			{
+				pixTest = TRUE;
+			}
+		}
+		if (GetKeyState('Z') >= 0)
+			quitSet = FALSE;
+		if (GetKeyState('X') >= 0)
+			quitSet2 = FALSE;
+		if (GetKeyState('C') >= 0)
+			quitSet3 = FALSE;
+	}
+	return 0;
+}
+
+int main()
+{
+
+	DWORD myThreadID;
+	HANDLE myHandle = CreateThread(0, 0, myThread, &cont, 0, &myThreadID);
+
+	// Set up a generic keyboard event.
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.wScan = 0; // hardware scan code for key
+	ip.ki.time = 0;
+	ip.ki.dwExtraInfo = 0;
+
+	while (1)
+	{
+		if(cont)
+			walk();
+		if (fish)
+			fishing();
+		if (pixTest)
+			pixelCheck();
+	}
+
+	// Exit normally
+	CloseHandle(myHandle);
+	return 0;
+}
+
+void fishing()
+{
+	// Press the "4" key
+	ip.ki.wVk = 0x34; // virtual-key code for the "4" key
+	ip.ki.dwFlags = 0; // 0 for key press
+	SendInput(1, &ip, sizeof(INPUT));
+
+	Sleep(1000);
+
+	// Release the "4" key
+	ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+	SendInput(1, &ip, sizeof(INPUT));
+
+	Sleep(3000);
+
+}
+
+void walk()
+{
+
+	if (encounterCheck())
+	{
+		encounter++;
+		printf("Encounter #%d! Checking Pokemon...\n", encounter);
+		Sleep(2000);
+		if (!pokemonCheck())
+		{
+			printf("Escaping...\n");
+			ip.ki.wVk = 0x34; // virtual-key code for the "4" key
+			ip.ki.dwFlags = 0; // 0 for key press
+			SendInput(1, &ip, sizeof(INPUT));
+			Sleep(100);
+			// Release the "4" key
+			ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+			SendInput(1, &ip, sizeof(INPUT));
+			Sleep(4000);
+		}
+		else
+		{
+
+			// pokemon tab
+			ip.ki.wVk = 0x32; // virtual-key code for the "2" key
+			ip.ki.dwFlags = 0; // 0 for key press
+			SendInput(1, &ip, sizeof(INPUT));
+			Sleep(100);
+			// Release the "2" key
+			ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+			SendInput(1, &ip, sizeof(INPUT));
+			
+			Sleep(1000);
+
+			// select false swiper
+			ip.ki.wVk = 0x32; // virtual-key code for the "2" key
+			ip.ki.dwFlags = 0; // 0 for key press
+			SendInput(1, &ip, sizeof(INPUT));
+			Sleep(100);
+			// Release the "2" key
+			ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+			SendInput(1, &ip, sizeof(INPUT));
+
+			Sleep(10000);
+
+			// attack
+
+			ip.ki.wVk = 0x31; // virtual-key code for the "2" key
+			ip.ki.dwFlags = 0; // 0 for key press
+			SendInput(1, &ip, sizeof(INPUT));
+			Sleep(100);
+			// Release the "2" key
+			ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+			SendInput(1, &ip, sizeof(INPUT));
+
+			Sleep(1000);
+
+			// false swipe
+			ip.ki.wVk = 0x33; // virtual-key code for the "2" key
+			ip.ki.dwFlags = 0; // 0 for key press
+			SendInput(1, &ip, sizeof(INPUT));
+			Sleep(100);
+			// Release the "2" key
+			ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+			SendInput(1, &ip, sizeof(INPUT));
+			Sleep(8000);
+			catchPokemon();		
+			Sleep(8000);
+			while (pokemonCheck())
+			{
+				catchPokemon();
+				Sleep(8000);
+			}
+		}
+	}
+
+	// Press the "S" key
+	//ip.ki.wVk = 0x53; // virtual-key code for the "s" key
+	ip.ki.wVk = 0x41;
+	ip.ki.dwFlags = 0; // 0 for key press
+	SendInput(1, &ip, sizeof(INPUT));
+
+	Sleep(1000);
+
+	// Release the "S" key
+	ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+	SendInput(1, &ip, sizeof(INPUT));
+
+	// Press the "W" key
+	//ip.ki.wVk = 0x57; // virtual-keya code for the "w" key
+	ip.ki.wVk = 0x44;
+	ip.ki.dwFlags = 0; // 0 for key press
+	SendInput(1, &ip, sizeof(INPUT));
+
+	Sleep(1000);
+
+	// Release the "W" key
+	ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+	SendInput(1, &ip, sizeof(INPUT));
+
+}
+
+bool encounterCheck()
+{
+	HDC hDC;
+	POINT p;
+	COLORREF color;
+	bool b;
+		
+	hDC = GetDC(NULL);
+
+	
+
+	SetCursorPos(-1345, 430);
+	b = GetCursorPos(&p);
+	color = GetPixel(hDC, p.x, p.y);
+
+	ReleaseDC(GetDesktopWindow(), hDC);
+
+	if (GetRValue(color) == 95 && (GetGValue(color) == 191 || GetGValue(color) == 190) && GetBValue(color) == 70)
+		return TRUE;
+
+	return FALSE;
+}
+
+int pokemonCheck()
+{
+	HDC hDC;
+	POINT p;
+	COLORREF color;
+	bool b;
+
+	int x;
+	int y;
+
+	hDC = GetDC(NULL);
+	// check for shiny
+	for (x = -1875; x <= -1862; x = x + 3)
+	{
+		for (y = 230; y <= 260; y = y + 3)
+		{
+			if (!cont)
+				break;
+			SetCursorPos(x, y);
+			b = GetCursorPos(&p);
+			color = GetPixel(hDC, p.x, p.y);
+			if ((GetRValue(color) <= 257 && GetRValue(color) >= 251) && (GetGValue(color) <= 244 && GetGValue(color) >= 238) && (GetBValue(color) <= 3 && GetBValue(color) >= 0))
+			{
+				ReleaseDC(GetDesktopWindow(), hDC);
+				Sleep(3000);
+				return 1;
+			}
+		}
+	}
+
+	// pokemon check
+	for (x = -1480; x <= -1465; x = x + 5)
+	{
+		for (y = 250; y <= 300; y = y + 3)
+		{
+			if (!cont)
+				break;
+			SetCursorPos(x, y);
+			b = GetCursorPos(&p);
+			color = GetPixel(hDC, p.x, p.y);
+			// ralts
+			if ((GetRValue(color) <= 183 && GetRValue(color) >= 177) && (GetGValue(color) <= 249 && GetGValue(color) >= 243) && (GetBValue(color) <= 151 && GetBValue(color) >= 145))
+			{
+				ReleaseDC(GetDesktopWindow(), hDC);
+				return 2;
+			}
+
+		}
+	}
+
+	ReleaseDC(GetDesktopWindow(), hDC);
+	return 0;
+}
+
+void pixelCheck()
+{
+	HDC hDC;
+	POINT p;
+	COLORREF color;
+	bool b;
+
+	hDC = GetDC(NULL);
+	b = GetCursorPos(&p);
+	color = GetPixel(hDC, p.x, p.y);
+	ReleaseDC(GetDesktopWindow(), hDC);
+	printf("%i, %i | %i, %i, %i\n", p.x, p.y, GetRValue(color), GetGValue(color), GetBValue(color));
+}
+
+void catchPokemon()
+{
+	HDC hDC;
+	POINT p;
+	COLORREF color;
+	bool b;
+
+	hDC = GetDC(NULL);
+
+	// items
+	ip.ki.wVk = 0x33; // virtual-key code for the "2" key
+	ip.ki.dwFlags = 0; // 0 for key press
+	SendInput(1, &ip, sizeof(INPUT));
+	Sleep(100);
+	// Release the "2" key
+	ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+	SendInput(1, &ip, sizeof(INPUT));
+
+	Sleep(1000);
+
+	// select pokeball
+	SetCursorPos(-1274, 166);
+	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+
+	Sleep(1000);
+
+}
